@@ -1,4 +1,6 @@
-# Meta Data Scrubber
+ever want to upload or use an asset or file somewhere but are concerned that it might have identifying metadata in it that you either missed, can't be bothered to remove yourself, or didn't know about? yeah me too. So I made this tool for myself. anyway.....
+
+# Meta Data Scrubber!
 
 A two-page, browser-only tool for stripping common embedded metadata from images, video, and audio, then replacing the original filename with a randomly generated one. Nothing is uploaded anywhere; all processing happens in the browser tab.
 
