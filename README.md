@@ -2,7 +2,7 @@ Ever want to upload or use an asset or file somewhere but are concerned that it 
 
 # Meta Data Scrubber!
 
-A two-page, browser-only tool for stripping common embedded metadata from images, video, and audio, then replacing the original filename with a randomly generated one. Nothing is uploaded anywhere; all processing happens in the browser tab.
+A two-page (plus logo), browser-only tool for stripping common embedded metadata from images, video, and audio, then replacing the original filename with a randomly generated one. Nothing is uploaded anywhere; all processing happens in the browser tab.
 
 ## Files
 
