@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Remove common metadata from images, video, and audio locally in your browser.">
+  <meta name="referrer" content="no-referrer">
+  <title>Local Media Scrubber</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">PRIVATE BY DESIGN</p>
+      <h1>Local Media Scrubber</h1>
+      <p class="subtitle">Clean metadata and replace filenames without uploading your files.</p>
+    </div>
+    <button id="themeButton" class="ghost compact" type="button" aria-label="Toggle color theme">Light theme</button>
+  </header>
+
+  <main>
+    <section class="privacy-strip" aria-label="Privacy summary">
+      <span class="status-dot" aria-hidden="true"></span>
+      <strong>Local processing</strong>
+      <span>File contents stay in this browser tab. No analytics or accounts.</span>
+    </section>
+
+    <section class="card supported">
+      <div>
+        <h2>Currently supported</h2>
+        <p><strong>Images:</strong> PNG, JPG/JPEG, WebP</p>
+        <p><strong>Video:</strong> MP4, MOV, WebM</p>
+        <p><strong>Audio:</strong> MP3, WAV, M4A</p>
+      </div>
+      <details>
+        <summary>What is not supported?</summary>
+        <p>DNG and other RAW camera files are not processed. GIF, animated WebP, documents, archives, and uncommon media containers are also excluded in this version. Unsupported files are rejected rather than falsely reported as clean.</p>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>1. Choose one file</h2>
+      <label id="dropZone" class="drop-zone" for="fileInput">
+        <input id="fileInput" type="file" accept=".png,.jpg,.jpeg,.webp,.mp4,.mov,.webm,.mp3,.wav,.m4a,image/png,image/jpeg,image/webp,video/mp4,video/quicktime,video/webm,audio/mpeg,audio/wav,audio/x-wav,audio/mp4">
+        <span class="drop-icon" aria-hidden="true">↓</span>
+        <span><strong>Drop a file here</strong> or browse</span>
+        <small>No configured size limit. Your device and browser memory are the practical limit.</small>
+      </label>
+      <div id="fileSummary" class="file-summary hidden" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h2>2. Cleaning mode</h2>
+      <div class="mode-grid">
+        <label class="mode-card">
+          <input type="radio" name="mode" value="standard" checked>
+          <span>
+            <strong>Standard</strong>
+            <small>Images are redrawn. Audio/video streams are remuxed where possible, preserving quality while dropping ordinary metadata.</small>
+          </span>
+        </label>
+        <label class="mode-card">
+          <input type="radio" name="mode" value="maximum">
+          <span>
+            <strong>Maximum</strong>
+            <small>Regenerates images and re-encodes audio/video into the same file type. Slower; size or quality can change.</small>
+          </span>
+        </label>
+      </div>
+      <details class="explain">
+        <summary>Roughly, how does cleaning work?</summary>
+        <p><strong>Images:</strong> the browser decodes the visible pixels, draws them to a fresh canvas, and exports a new image of the same type. Metadata such as EXIF is not intentionally copied. JPEG and WebP output is encoded at high quality.</p>
+        <p><strong>Video/audio, Standard:</strong> FFmpeg rewrites the media container, copies normal media streams, and does not map global metadata or chapters. Cover art, attachments, data streams, and subtitle streams are not copied.</p>
+        <p><strong>Video/audio, Maximum:</strong> FFmpeg decodes and re-encodes normal audio/video streams in the same general file type, while omitting metadata, chapters, subtitles, attachments, and data streams.</p>
+        <p class="caution">No general-purpose cleaner can honestly guarantee removal of every unknown or proprietary structure. The result panel reports the operation performed and any warnings.</p>
+      </details>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <h2>3. Random filename</h2>
+        <button id="previewNameButton" class="ghost compact" type="button">New preview</button>
+      </div>
+      <div class="settings-grid">
+        <label>Length
+          <div class="range-line">
+            <input id="nameLength" type="range" min="4" max="128" value="24">
+            <output id="nameLengthOutput">24</output>
+          </div>
+        </label>
+        <fieldset>
+          <legend>Characters</legend>
+          <label><input id="lowercase" type="checkbox" checked> a–z</label>
+          <label><input id="uppercase" type="checkbox" checked> A–Z</label>
+          <label><input id="numbers" type="checkbox" checked> 0–9</label>
+          <label><input id="symbols" type="checkbox"> Safe symbols <code>_-!@#$%&amp;+=</code></label>
+        </fieldset>
+      </div>
+      <p class="name-preview"><span>Preview</span><code id="namePreview">—</code></p>
+      <p class="fine-print">The original extension is kept automatically because this tool cleans files; it does not convert them. Names use the browser's cryptographically strong random-number generator.</p>
+    </section>
+
+    <section class="card advanced-card">
+      <details>
+        <summary>Advanced local options</summary>
+        <label class="toggle-row">
+          <input id="hashes" type="checkbox">
+          <span><strong>Calculate SHA-256 fingerprints</strong><small>Off by default. This is only a local comparison aid; nothing is submitted.</small></span>
+        </label>
+      </details>
+    </section>
+
+    <section class="actions">
+      <button id="cleanButton" class="primary" type="button" disabled>Clean file</button>
+      <button id="clearButton" class="ghost" type="button">Clear</button>
+    </section>
+
+    <section id="progressCard" class="card hidden" aria-live="polite">
+      <div class="section-heading"><h2>Processing</h2><span id="progressText">Preparing…</span></div>
+      <progress id="progressBar" max="100" value="0">0%</progress>
+      <pre id="log" class="log"></pre>
+    </section>
+
+    <section id="resultCard" class="card result hidden" aria-live="polite">
+      <div class="result-title"><span class="check">✓</span><div><h2>Cleaned locally</h2><p id="resultSubtitle"></p></div></div>
+      <dl id="resultDetails"></dl>
+      <div id="warningBox" class="warning hidden"></div>
+      <div class="result-actions">
+        <a id="downloadButton" class="primary button-link" download>Download cleaned file</a>
+        <button id="discardButton" class="ghost" type="button">Discard result</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Nothing is uploaded by this app. The FFmpeg engine is loaded from a pinned public package host when audio or video is processed; your selected file is not sent to that host.</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
