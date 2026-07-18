@@ -4,7 +4,7 @@ Ever want to upload or use an asset or file somewhere but are concerned that it 
 
 A two-page, browser-only tool for stripping common embedded metadata from supported images, video, audio, and documents; then replacing the original filename with a randomly generated one. Nothing is uploaded; all processing happens in your tab.
 
-Files
+## Files
 
 · index.html — landing page with description and launch link.
 · Meta_Data_Scrubber.html — the tool itself. Fully self-contained.
