@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>PhosphorCrush — Local Image Size Reducer</title>
+<style>
+:root{
+  --bg:#020704;
+  --panel:#05100a;
+  --panel2:#030b07;
+  --text:#baffc7;
+  --muted:#6ea77a;
+  --line:#1e6132;
+  --line-hot:#42ff76;
+  --accent:#59ff8b;
+  --accent2:#b8ff55;
+  --amber:#ffcc63;
+  --bad:#ff6e6e;
+  --warn:#ffd166;
+  --radius:3px;
+  --glow:0 0 8px rgba(89,255,139,.35),0 0 24px rgba(89,255,139,.10);
+}
+*{box-sizing:border-box}
+html{background:#010402}
+body{
+  margin:0;
+  background:
+    linear-gradient(rgba(2,16,7,.74),rgba(1,5,3,.96)),
+    radial-gradient(circle at 50% 0,#103b1c 0,transparent 42%),
+    repeating-linear-gradient(90deg,rgba(89,255,139,.018) 0 1px,transparent 1px 8px),
+    var(--bg);
+  color:var(--text);
+  font:14px/1.55 "Cascadia Mono","IBM Plex Mono","Courier New",monospace;
+  min-height:100vh;
+  overflow-x:hidden;
+  text-shadow:0 0 5px rgba(89,255,139,.16);
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  pointer-events:none;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.025) 0,rgba(255,255,255,.025) 1px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);
+  mix-blend-mode:overlay;
+  opacity:.55;
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:9998;
+  pointer-events:none;
+  box-shadow:inset 0 0 120px #000,inset 0 0 28px rgba(0,0,0,.9);
+  background:linear-gradient(90deg,rgba(255,0,0,.012),rgba(0,255,0,.008),rgba(0,0,255,.012));
+}
+::selection{background:var(--accent);color:#001b09;text-shadow:none}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,.drop:focus-visible{outline:1px solid var(--accent);outline-offset:3px;box-shadow:var(--glow)}
+.app{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:30px 0 64px;position:relative}
+.app::before{
+  content:"PHOSPHOR SYSTEMS // IMG-COMPRESSION NODE 04 // SECURE LOCAL SESSION";
+  display:block;
+  margin-bottom:20px;
+  padding:7px 10px;
+  border-top:1px solid var(--line-hot);
+  border-bottom:1px solid var(--line);
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:.17em;
+  background:linear-gradient(90deg,rgba(89,255,139,.11),transparent 72%);
+}
+.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:20px;position:relative}
+.eyebrow{color:var(--accent);font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:11px;text-shadow:0 0 12px rgba(89,255,139,.6)}
+.eyebrow::before{content:"[ ";color:var(--muted)}
+.eyebrow::after{content:" ]";color:var(--muted)}
+.top h1{font-size:clamp(34px,5vw,60px);line-height:.95;margin:.22em 0 .3em;letter-spacing:-.06em;text-transform:uppercase;color:#caffd4;text-shadow:0 0 7px rgba(89,255,139,.45),0 0 28px rgba(89,255,139,.13)}
+.top h1::after{content:"_";color:var(--accent);font-weight:400;animation:blink 1.05s steps(1,end) infinite}
+@keyframes blink{50%{opacity:0}}
+.top p{color:var(--muted);max-width:720px;margin:0;font-size:14px;border-left:2px solid var(--line);padding-left:14px}
+.privacy{display:flex;align-items:center;gap:8px;color:#caffd4;background:#06150b;border:1px solid var(--line);padding:8px 11px;white-space:nowrap;font-weight:800;font-size:11px;letter-spacing:.09em;text-transform:uppercase;box-shadow:inset 0 0 18px rgba(89,255,139,.04)}
+.privacy::before{content:"STATUS:";color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:0;background:var(--accent);box-shadow:0 0 4px var(--accent),0 0 14px var(--accent);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.38}}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px}
+.card{position:relative;background:linear-gradient(180deg,rgba(5,16,10,.97),rgba(2,8,5,.98));border:1px solid var(--line);border-radius:var(--radius);box-shadow:inset 0 0 28px rgba(89,255,139,.025),0 18px 60px #000b}
+.card::before,.item::before{content:"";position:absolute;left:-1px;top:-1px;width:22px;height:1px;background:var(--accent);box-shadow:0 0 8px rgba(89,255,139,.6)}
+.card::after{content:"";position:absolute;right:-1px;bottom:-1px;width:22px;height:1px;background:var(--accent)}
+.drop{min-height:270px;border:1px dashed #267441;margin:14px;border-radius:1px;display:grid;place-items:center;text-align:center;padding:38px;transition:.18s;background:repeating-linear-gradient(0deg,rgba(89,255,139,.018) 0 1px,transparent 1px 12px),#030c07;position:relative;overflow:hidden}
+.drop::before{content:"INPUT PORT // DRAG-DROP BUFFER";position:absolute;top:8px;left:10px;color:#3d7d4c;font-size:9px;letter-spacing:.15em}
+.drop::after{content:"READY";position:absolute;right:10px;bottom:8px;color:var(--accent);font-size:9px;letter-spacing:.15em}
+.drop.drag{border-color:var(--accent);background:#071c0e;box-shadow:inset 0 0 38px rgba(89,255,139,.10),var(--glow);transform:none}
+.drop svg{width:50px;height:50px;color:var(--accent);margin-bottom:12px;filter:drop-shadow(0 0 8px rgba(89,255,139,.38))}
+.drop h2{margin:0 0 6px;font-size:20px;text-transform:uppercase;letter-spacing:.02em}
+.drop h2::before{content:"> ";color:var(--accent)}
+.drop p{margin:0;color:var(--muted);font-size:12px}
+.btn{border:1px solid var(--accent);border-radius:1px;padding:10px 15px;font-weight:900;background:var(--accent);color:#001b09;box-shadow:0 0 14px rgba(89,255,139,.14);text-transform:uppercase;letter-spacing:.055em;font-size:11px;transition:background .15s,color .15s,box-shadow .15s}
+.btn:hover{background:#d1ffda;box-shadow:0 0 18px rgba(89,255,139,.36)}
+.btn.secondary{background:#07130b;color:var(--text);border:1px solid #245e35;box-shadow:none}
+.btn.secondary:hover{border-color:var(--accent);background:#0a2011;color:#d7ffdf}
+.btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.7)}
+.actions{display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.settings{padding:18px}
+.settings::before{content:"CONFIG // ENCODER PARAMETERS";position:static;display:block;width:auto;height:auto;background:none;box-shadow:none;color:var(--accent);font-size:9px;letter-spacing:.14em;margin-bottom:8px}
+.settings h2{font-size:16px;margin:0 0 18px;text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:9px;letter-spacing:.04em}
+.field{margin:0 0 18px}
+.field label{display:flex;justify-content:space-between;font-weight:800;margin-bottom:8px;color:#bfffc9;font-size:12px;text-transform:uppercase;letter-spacing:.035em}
+.field small,.note{color:var(--muted);display:block;margin-top:4px;font-size:10px;line-height:1.45;text-transform:none;letter-spacing:0}
+output{color:var(--accent);text-shadow:0 0 9px rgba(89,255,139,.45)}
+select,input[type=number]{width:100%;background:#020905;color:var(--text);border:1px solid #205e33;border-radius:1px;padding:9px;box-shadow:inset 0 0 12px #000}
+select:hover{border-color:#32954f}
+input[type=range]{width:100%;accent-color:var(--accent);filter:drop-shadow(0 0 4px rgba(89,255,139,.25))}
+.check{display:flex;gap:9px;align-items:flex-start;padding:8px;border-left:1px solid #18512a;background:rgba(89,255,139,.025)}
+.check input{margin-top:4px;accent-color:var(--accent);border-radius:0}
+.mini{font-size:10px;color:var(--muted);padding-top:14px;border-top:1px solid var(--line);line-height:1.55}
+.mini strong{color:var(--amber)}
+code{color:#b8ff55;background:#07150b;padding:1px 4px;border:1px solid #174a27}
+.paletteBlock{margin:20px 0 18px;padding:14px 10px 10px;border:1px solid #6a5521;background:linear-gradient(180deg,rgba(255,204,99,.045),rgba(255,204,99,.012));position:relative}
+.paletteBlock::before{content:"OPTIONAL // DESTRUCTIVE COLOR REDUCTION";display:block;color:var(--amber);font-size:9px;letter-spacing:.14em;margin-bottom:10px}
+.paletteBlock .check{border-left-color:var(--amber);margin-bottom:12px}
+.paletteControls{padding:12px 10px 2px;border:1px solid #285f36;background:rgba(89,255,139,.025);transition:opacity .15s,filter .15s,border-color .15s}
+.paletteControls.isLocked{opacity:.35;filter:grayscale(1);border-color:#263429;pointer-events:none}
+.paletteControls .field:last-child{margin-bottom:10px}
+.paletteWarning{margin-top:10px;border-top:0;border-left:2px solid var(--amber);padding:7px 0 7px 10px}
+.results{margin-top:12px;padding:14px;border:1px solid var(--line);background:rgba(2,9,5,.92);position:relative}
+.results::before{content:"OUTPUT QUEUE // PROCESSED ASSETS";display:block;color:var(--accent);font-size:9px;letter-spacing:.15em;margin-bottom:12px}
+.resultsHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.resultsHead h2{margin:0;text-transform:uppercase;font-size:17px}
+.summary{color:var(--muted);font-variant-numeric:tabular-nums;font-size:11px}
+.list{display:grid;gap:8px}
+.item{position:relative;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px;border:1px solid #174a27;border-radius:1px;background:linear-gradient(90deg,rgba(89,255,139,.04),transparent 48%),#030b07}
+.thumb{width:72px;height:62px;object-fit:cover;border-radius:0;background:#010402;border:1px solid #28633a;filter:saturate(.82) contrast(1.06)}
+.name{font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d3ffdc}
+.meta{color:var(--muted);font-size:11px;display:flex;gap:10px;flex-wrap:wrap}
+.meta span::before{content:"/ ";color:#315d3b}
+.saving{color:var(--accent);font-weight:900}
+.loss{color:var(--bad);font-weight:900}
+.status{font-size:10px;color:var(--warn);margin-top:4px;text-transform:uppercase;letter-spacing:.02em}
+.status::before{content:"SYS> ";color:var(--muted)}
+.itemActions{display:flex;gap:8px}
+.iconBtn{border:1px solid #287142;background:#07150b;color:var(--text);border-radius:1px;padding:8px 10px;font-weight:800;text-transform:uppercase;font-size:10px}
+.iconBtn:hover{border-color:var(--accent);color:var(--accent);box-shadow:var(--glow)}
+.iconBtn.danger{border-color:#5c1a1a;color:#ff8888;background:#0f0303}
+.iconBtn.danger:hover{border-color:var(--bad);color:var(--bad);box-shadow:0 0 10px rgba(255,110,110,.25)}
+.progress{height:3px;border-radius:0;background:#0c2917;overflow:hidden;margin-top:8px}
+.bar{height:100%;background:var(--accent);width:0;transition:width .2s;box-shadow:0 0 9px var(--accent)}
+.empty{color:var(--muted);text-align:center;padding:24px}
+.footer{margin-top:16px;color:#52795b;font-size:10px;border-top:1px solid #174727;padding-top:12px;text-transform:uppercase;letter-spacing:.035em}
+.pill{display:inline-block;border:1px solid #255c35;padding:2px 7px;border-radius:1px;margin-right:5px;color:#85c693;background:#041009}
+.pill::before{content:"✓ ";color:var(--accent)}
+.hidden{display:none!important}
+@media(prefers-reduced-motion:reduce){.top h1::after,.dot{animation:none}*{scroll-behavior:auto!important;transition:none!important}}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.top{display:block}.privacy{display:inline-flex;margin-top:18px}.item{grid-template-columns:58px minmax(0,1fr)}.thumb{width:58px;height:58px}.itemActions{grid-column:1/-1}.itemActions button{flex:1}.app::before{line-height:1.55}.resultsHead{align-items:flex-start;flex-direction:column}.resultsHead .actions{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div><div class="eyebrow">Private • browser-only</div><h1>PhosphorCrush</h1><p>Reduce PNG, JPEG, WebP, and, when the optional decoder can load, HEIC files without changing their dimensions. Images are processed in your browser and are never uploaded.</p></div>
+    <div class="privacy"><span class="dot"></span> Local processing</div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose or drop images">
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          <h2>Drop images here</h2>
+          <p>PNG, JPG/JPEG, WebP, HEIC/HEIF • multiple files welcome<br><span style="color:var(--amber);font-size:11px;letter-spacing:.02em;">Set compression sliders before dropping, processing starts automatically</span></p>
+          <div class="actions"><button class="btn" id="pick">Choose images</button><button class="btn secondary" id="sampleSettings" type="button">Use conservative preset</button></div>
+        </div>
+      </div>
+      <input id="files" class="hidden" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.heic,.heif" multiple />
+    </div>
+
+    <aside class="card settings">
+      <h2>Compression settings</h2>
+      <div class="mini" style="margin-bottom:14px;border-left:2px solid var(--amber);padding-left:10px;"><strong>Alert:</strong> Processing begins the moment files are added. Configure these first.</div>
+      <div class="field"><label for="format"><span>Output</span></label><select id="format"><option value="auto">Auto — WebP for smallest result</option><option value="image/webp">WebP</option><option value="image/jpeg">JPEG</option><option value="image/png">PNG (lossless; may be larger)</option></select></div>
+      <div class="field"><label for="target"><span>Target reduction</span><output id="targetOut">55%</output></label><input id="target" type="range" min="10" max="80" value="55" step="1"><small>Best effort; visual-quality floor always wins.</small></div>
+      <div class="field"><label for="floor"><span>Quality floor</span><output id="floorOut">78%</output></label><input id="floor" type="range" min="60" max="95" value="78" step="1"><small>Higher means fewer visible changes, but larger files.</small></div>
+      <div class="field check"><input type="checkbox" id="keepSmaller" checked><label for="keepSmaller"><span>Never return a larger file</span><small>Keep the original if re-encoding does not help.</small></label></div>
+      <div class="field check"><input type="checkbox" id="alpha" checked><label for="alpha"><span>Preserve transparency</span><small>JPEG will be avoided for transparent images.</small></label></div>
+
+      <div class="paletteBlock">
+        <div class="field check">
+          <input type="checkbox" id="paletteEnabled">
+          <label for="paletteEnabled"><span>Enable palette reduction</span><small>Off by default. Intentionally limits the image's colors before normal output encoding.</small></label>
+        </div>
+        <div id="paletteControls" class="paletteControls isLocked" aria-disabled="true">
+          <div class="field"><label for="paletteSize"><span>Maximum palette colors</span><output id="paletteSizeOut">64</output></label><input id="paletteSize" type="range" min="2" max="256" value="64" step="1" disabled><small>Sets the maximum allowed colors. The generated palette may contain fewer.</small></div>
+          <div class="field"><label for="dither"><span>Dithering method</span></label><select id="dither" disabled><option value="none">None — direct mapping</option><option value="floyd">Floyd–Steinberg</option><option value="bayer">Ordered — fixed 4×4 Bayer matrix</option></select><small>Floyd–Steinberg diffuses error. Bayer applies a stable ordered pattern.</small></div>
+        </div>
+        <div class="mini paletteWarning"><strong>Separate destructive option:</strong> This changes pixel colors and is not an output format. It only runs when explicitly enabled.</div>
+      </div>
+
+      <div class="mini"><strong>HEIC note:</strong> HEIC decoding uses the open-source MIT-licensed <code>heic2any</code> library. The page first checks for a local <code>heic2any.min.js</code>, then can fetch it from jsDelivr. Image bytes remain in this tab.</div>
+    </aside>
+  </section>
+
+  <section class="results hidden" id="results">
+    <div class="resultsHead"><div><h2>Results</h2><div class="summary" id="summary"></div></div><div class="actions"><button class="btn secondary" id="clear">Clear</button><button class="btn" id="downloadAll" disabled>Download all</button></div></div>
+    <div class="list" id="list"></div>
+  </section>
+  <div class="footer"><span class="pill">No uploads</span><span class="pill">No tracking</span><span class="pill">Dimensions preserved</span> Results vary by image content and the browser's encoder; already-optimized images may not reach the selected target.</div>
+</main>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const els={drop:$('#drop'),pick:$('#pick'),files:$('#files'),format:$('#format'),target:$('#target'),targetOut:$('#targetOut'),floor:$('#floor'),floorOut:$('#floorOut'),keepSmaller:$('#keepSmaller'),alpha:$('#alpha'),paletteEnabled:$('#paletteEnabled'),paletteControls:$('#paletteControls'),paletteSize:$('#paletteSize'),paletteSizeOut:$('#paletteSizeOut'),dither:$('#dither'),results:$('#results'),list:$('#list'),summary:$('#summary'),clear:$('#clear'),downloadAll:$('#downloadAll'),sampleSettings:$('#sampleSettings')};
+let records=[];
+const fmt=n=>n<1024?`${n} B`:n<1048576?`${(n/1024).toFixed(1)} KB`:`${(n/1048576).toFixed(2)} MB`;
+const esc=s=>s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const extFor=t=>t==='image/jpeg'?'jpg':t==='image/png'?'png':'webp';
+const baseName=n=>n.replace(/\.[^.]+$/,'');
+const isHeic=f=>/\.(heic|heif)$/i.test(f.name)||/image\/hei[cf]/i.test(f.type);
+function setRanges(){els.targetOut.value=els.target.value+'%';els.floorOut.value=els.floor.value+'%'}
+els.target.oninput=els.floor.oninput=setRanges; setRanges();
+function setPaletteUI(){const enabled=els.paletteEnabled.checked;els.paletteSize.disabled=!enabled;els.dither.disabled=!enabled;els.paletteControls.classList.toggle('isLocked',!enabled);els.paletteControls.setAttribute('aria-disabled',String(!enabled));els.paletteSizeOut.value=els.paletteSize.value}
+els.paletteEnabled.onchange=setPaletteUI;
+els.paletteSize.oninput=()=>{els.paletteSizeOut.value=els.paletteSize.value};
+setPaletteUI();
+els.pick.onclick=e=>{e.stopPropagation();els.files.click()};
+els.drop.onclick=e=>{if(e.target===els.drop||!e.target.closest('button'))els.files.click()};
+els.drop.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();els.files.click()}};
+['dragenter','dragover'].forEach(x=>els.drop.addEventListener(x,e=>{e.preventDefault();els.drop.classList.add('drag')}));
+['dragleave','drop'].forEach(x=>els.drop.addEventListener(x,e=>{e.preventDefault();els.drop.classList.remove('drag')}));
+els.drop.addEventListener('drop',e=>addFiles([...e.dataTransfer.files]));
+els.files.onchange=()=>{addFiles([...els.files.files]);els.files.value=''};
+els.sampleSettings.onclick=e=>{e.stopPropagation();els.target.value=45;els.floor.value=84;els.format.value='auto';setRanges()};
+els.clear.onclick=()=>{records.forEach(r=>{if(r.url)URL.revokeObjectURL(r.url);if(r.originalUrl)URL.revokeObjectURL(r.originalUrl)});records=[];render()};
+els.downloadAll.onclick=async()=>{
+  const targets=records.filter(x=>x.done&&x.output);
+  if(!targets.length)return;
+  try{
+    els.downloadAll.disabled=true;
+    els.downloadAll.textContent='Bundling ZIP…';
+    const JSZip=await loadJSZip();
+    const zip=new JSZip();
+    targets.forEach(r=>zip.file(r.outputName,r.output));
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='phosphorcrush-batch.zip';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+    els.downloadAll.textContent='Download all';
+    els.downloadAll.disabled=false;
+  }catch(e){
+    console.warn('ZIP bundling failed, falling back to individual downloads:',e);
+    els.downloadAll.textContent='Downloading…';
+    for(const r of targets){download(r);await new Promise(v=>setTimeout(v,220))}
+    els.downloadAll.textContent='Download all';
+    els.downloadAll.disabled=false;
+  }
+};
+function download(r){const a=document.createElement('a');a.href=r.url;a.download=r.outputName;a.click()}
+function removeRecord(id){
+  const idx=records.findIndex(r=>r.id===id);
+  if(idx===-1)return;
+  const r=records[idx];
+  if(r.url)URL.revokeObjectURL(r.url);
+  if(r.originalUrl)URL.revokeObjectURL(r.originalUrl);
+  records.splice(idx,1);
+  render();
+}
+function toBlob(canvas,type,quality){return new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error('The browser encoder returned no data.')),type,quality))}
+function canvasHasAlpha(ctx,w,h){const max=1000000,scale=Math.min(1,Math.sqrt(max/(w*h)));const sw=Math.max(1,Math.floor(w*scale)),sh=Math.max(1,Math.floor(h*scale));if(scale===1){const d=ctx.getImageData(0,0,w,h).data;for(let i=3;i<d.length;i+=4)if(d[i]<255)return true;return false}const c=document.createElement('canvas');c.width=sw;c.height=sh;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(ctx.canvas,0,0,sw,sh);const d=x.getImageData(0,0,sw,sh).data;for(let i=3;i<d.length;i+=4)if(d[i]<255)return true;return false}
+async function loadHeic2Any(){if(window.heic2any)return window.heic2any;const urls=['./heic2any.min.js','https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js'];let last;for(const src of urls){try{await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=()=>{s.remove();reject(new Error('Could not load '+src))};document.head.appendChild(s)});if(window.heic2any)return window.heic2any}catch(e){last=e}}throw new Error('HEIC decoder unavailable. Connect once to load it, or place heic2any.min.js beside this HTML file. '+(last?.message||''))}
+async function loadJSZip(){if(window.JSZip)return window.JSZip;await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';s.onload=resolve;s.onerror=()=>reject(new Error('Could not load JSZip library'));document.head.appendChild(s)});return window.JSZip;}
+async function decode(file){let blob=file;if(isHeic(file)){const heic2any=await loadHeic2Any();blob=await heic2any({blob:file,toType:'image/png'});if(Array.isArray(blob))blob=blob[0]}let bitmap;try{bitmap=await createImageBitmap(blob,{imageOrientation:'from-image'})}catch(_){bitmap=await new Promise((resolve,reject)=>{const img=new Image();const u=URL.createObjectURL(blob);img.onload=()=>{URL.revokeObjectURL(u);resolve(img)};img.onerror=()=>{URL.revokeObjectURL(u);reject(new Error('This browser could not decode the image.'))};img.src=u})}return bitmap}
+function chooseType(file,hasAlpha){if(els.format.value!=='auto'){if(els.format.value==='image/jpeg'&&hasAlpha&&els.alpha.checked)return'image/webp';return els.format.value}return'image/webp'}
+
+const BAYER_4X4=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+const clampByte=n=>Math.max(0,Math.min(255,Math.round(n)));
+function makePalette(data,maxColors){
+  const bins=new Map(),pixels=data.length/4,stride=Math.max(1,Math.floor(pixels/120000));
+  for(let p=0;p<pixels;p+=stride){const i=p*4,a=data[i+3];if(a<8)continue;const r=data[i],g=data[i+1],b=data[i+2],key=(r>>3)<<10|(g>>3)<<5|(b>>3),bin=bins.get(key);if(bin){bin.r+=r;bin.g+=g;bin.b+=b;bin.n++}else bins.set(key,{r,g,b,n:1})}
+  const colors=[...bins.values()].map(v=>({r:v.r/v.n,g:v.g/v.n,b:v.b/v.n,n:v.n}));
+  if(!colors.length)return[[0,0,0]];
+  if(colors.length<=maxColors)return colors.map(c=>[clampByte(c.r),clampByte(c.g),clampByte(c.b)]);
+  const stats=entries=>{let r0=255,r1=0,g0=255,g1=0,b0=255,b1=0,weight=0;for(const c of entries){if(c.r<r0)r0=c.r;if(c.r>r1)r1=c.r;if(c.g<g0)g0=c.g;if(c.g>g1)g1=c.g;if(c.b<b0)b0=c.b;if(c.b>b1)b1=c.b;weight+=c.n}const ranges=[r1-r0,g1-g0,b1-b0],channel=ranges[1]>ranges[0]?(ranges[2]>ranges[1]?'b':'g'):(ranges[2]>ranges[0]?'b':'r');return{colors:entries,weight,channel,range:Math.max(...ranges)}};
+  const boxes=[stats(colors)];
+  while(boxes.length<maxColors){let bi=-1,best=-1;for(let i=0;i<boxes.length;i++){const box=boxes[i];if(box.colors.length<2||box.range<=0)continue;const score=box.range*Math.sqrt(box.weight);if(score>best){best=score;bi=i}}if(bi<0)break;const box=boxes.splice(bi,1)[0];box.colors.sort((a,b)=>a[box.channel]-b[box.channel]);const half=box.weight/2;let sum=0,cut=1;for(let i=0;i<box.colors.length-1;i++){sum+=box.colors[i].n;if(sum>=half){cut=i+1;break}}boxes.push(stats(box.colors.slice(0,cut)),stats(box.colors.slice(cut)))}
+  return boxes.map(box=>{let r=0,g=0,b=0,n=0;for(const c of box.colors){r+=c.r*c.n;g+=c.g*c.n;b+=c.b*c.n;n+=c.n}return[clampByte(r/n),clampByte(g/n),clampByte(b/n)]});
+}
+function nearestPaletteColor(r,g,b,palette,cache){const cr=clampByte(r),cg=clampByte(g),cb=clampByte(b),key=(cr>>3)<<10|(cg>>3)<<5|(cb>>3);let hit=cache.get(key);if(hit)return hit;let best=palette[0],bestD=Infinity;for(const p of palette){const dr=cr-p[0],dg=cg-p[1],db=cb-p[2],d=2*dr*dr+4*dg*dg+3*db*db;if(d<bestD){bestD=d;best=p}}cache.set(key,best);return best}
+function mapPaletteNone(data,palette){const cache=new Map();for(let i=0;i<data.length;i+=4){if(data[i+3]===0)continue;const p=nearestPaletteColor(data[i],data[i+1],data[i+2],palette,cache);data[i]=p[0];data[i+1]=p[1];data[i+2]=p[2]}}
+function mapPaletteBayer(data,w,h,palette){const cache=new Map(),levels=Math.max(2,Math.cbrt(palette.length)),amplitude=Math.min(48,Math.max(5,255/levels*.72));for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;if(data[i+3]===0)continue;const offset=((BAYER_4X4[y&3][x&3]+.5)/16-.5)*amplitude,p=nearestPaletteColor(data[i]+offset,data[i+1]+offset,data[i+2]+offset,palette,cache);data[i]=p[0];data[i+1]=p[1];data[i+2]=p[2]}}
+function mapPaletteFloyd(data,w,h,palette){const cache=new Map();let current=new Float32Array((w+2)*3),next=new Float32Array((w+2)*3);for(let y=0;y<h;y++){for(let x=0;x<w;x++){const i=(y*w+x)*4,e=(x+1)*3;if(data[i+3]===0)continue;const r=clampByte(data[i]+current[e]),g=clampByte(data[i+1]+current[e+1]),b=clampByte(data[i+2]+current[e+2]),p=nearestPaletteColor(r,g,b,palette,cache);data[i]=p[0];data[i+1]=p[1];data[i+2]=p[2];const errors=[r-p[0],g-p[1],b-p[2]];for(let ch=0;ch<3;ch++){const error=errors[ch];current[e+3+ch]+=error*7/16;next[e-3+ch]+=error*3/16;next[e+ch]+=error*5/16;next[e+3+ch]+=error/16}}current=next;next=new Float32Array((w+2)*3)}}
+function reducePalette(ctx,w,h,maxColors,method){const image=ctx.getImageData(0,0,w,h),palette=makePalette(image.data,maxColors);if(method==='floyd')mapPaletteFloyd(image.data,w,h,palette);else if(method==='bayer')mapPaletteBayer(image.data,w,h,palette);else mapPaletteNone(image.data,palette);ctx.putImageData(image,0,0);return palette.length}
+
+async function compress(file,rec){rec.status='Decoding';render();const img=await decode(file);const w=img.width||img.naturalWidth,h=img.height||img.naturalHeight;if(!w||!h)throw new Error('Image dimensions are unavailable.');const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d',{alpha:true,willReadFrequently:true});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(img,0,0,w,h);if(img.close)img.close();const hasAlpha=canvasHasAlpha(ctx,w,h);
+const paletteEnabled=els.paletteEnabled.checked,paletteSize=Number(els.paletteSize.value),dither=els.dither.value;if(paletteEnabled){rec.status=`Reducing palette to at most ${paletteSize} colors`;rec.width=w;rec.height=h;render();rec.paletteColors=reducePalette(ctx,w,h,paletteSize,dither);rec.dither=dither}
+const type=chooseType(file,hasAlpha);rec.status='Finding the smallest clean result';rec.width=w;rec.height=h;render();let out;
+if(type==='image/png'){out=await toBlob(c,type)}else{const targetBytes=file.size*(1-Number(els.target.value)/100),floor=Number(els.floor.value)/100;let lo=floor,hi=.96,best=await toBlob(c,type,hi);for(let i=0;i<8;i++){const q=(lo+hi)/2;const b=await toBlob(c,type,q);if(b.size<=targetBytes){best=b;lo=q}else{hi=q;if(b.size<best.size)best=b}}const floorBlob=await toBlob(c,type,floor);if(best.size>targetBytes&&floorBlob.size<best.size)best=floorBlob;out=best}
+let keptOriginal=false;if(els.keepSmaller.checked&&out.size>=file.size&&!isHeic(file)&&!paletteEnabled){out=file;keptOriginal=true}rec.output=out;rec.type=out.type||file.type;rec.outputName=keptOriginal?file.name:`${baseName(file.name)}-compressed.${extFor(rec.type)}`;rec.url=URL.createObjectURL(out);rec.originalUrl=URL.createObjectURL(file);rec.saved=1-out.size/file.size;const baseStatus=keptOriginal?'Original kept — re-encoding was not smaller':(rec.saved>=Number(els.target.value)/100?'Target reached':'Quality floor protected the image');const ditherLabel=rec.dither==='floyd'?'Floyd–Steinberg':rec.dither==='bayer'?'4×4 Bayer':'no dithering';rec.status=rec.paletteColors?`${baseStatus} • ${rec.paletteColors} palette colors • ${ditherLabel}`:baseStatus;rec.done=true;render()}
+async function addFiles(files){const valid=files.filter(f=>f.type.startsWith('image/')||/\.(png|jpe?g|webp|heic|heif)$/i.test(f.name));for(const file of valid){const rec={id:crypto.randomUUID(),file,done:false,error:false,status:'Queued'};records.push(rec);render();try{await compress(file,rec)}catch(e){rec.done=true;rec.error=true;rec.status=e.message||String(e);render()}}}
+function render(){els.results.classList.toggle('hidden',records.length===0);const good=records.filter(r=>r.done&&r.output);const original=good.reduce((s,r)=>s+r.file.size,0),now=good.reduce((s,r)=>s+r.output.size,0);els.summary.textContent=good.length?`${good.length} complete • ${fmt(original)} → ${fmt(now)} • ${Math.max(0,(1-now/original)*100).toFixed(1)}% smaller`:records.length?`${records.length} image${records.length===1?'':'s'} queued or processing`:'';els.downloadAll.disabled=!good.length;els.list.innerHTML=records.map(r=>{const pct=r.done&&!r.error?Math.max(0,Math.round(r.saved*100)):0;const thumb=r.url||r.originalUrl||'';return `<article class="item"><div>${thumb?`<img class="thumb" src="${thumb}" alt="">`:`<div class="thumb"></div>`}</div><div><div class="name" title="${esc(r.file.name)}">${esc(r.file.name)}</div><div class="meta"><span>${fmt(r.file.size)}</span>${r.output?`<span>→ ${fmt(r.output.size)}</span><span class="${r.saved>=0?'saving':'loss'}">${r.saved>=0?pct+'% smaller':Math.abs(pct)+'% larger'}</span>`:''}${r.width?`<span>${r.width}×${r.height}</span>`:''}${r.paletteColors?`<span>${r.paletteColors} colors</span>`:''}</div><div class="status">${r.error?'Error: ':''}${esc(r.status)}</div>${!r.done?`<div class="progress"><div class="bar" style="width:${r.status==='Queued'?8:r.status==='Decoding'?35:75}%"></div></div>`:''}</div><div class="itemActions">${r.output?`<button class="iconBtn" data-id="${r.id}">Download</button>`:''}${r.done?`<button class="iconBtn danger" data-rm="${r.id}">Remove</button>`:''}</div></article>`}).join('');els.list.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>download(records.find(r=>r.id===b.dataset.id)));els.list.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>removeRecord(b.dataset.rm))}
+</script>
+</body>
+</html>
