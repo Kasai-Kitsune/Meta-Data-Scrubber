@@ -52,3 +52,5 @@ Image      PNG, JPG/JPEG, WebP, HEIC/HEIF (→ PNG)     PNG, JPG/JPEG, WebP, HEI
 Document   PDF, DOCX, XLSX, PPTX, ODT, ODS, ODP       —
 
 Not supported by either tool: DNG/RAW, GIF, animated WebP, video, audio, archives, and uncommon containers.
+
+## My latest release includes an Android apk for installing and running this tool locally as an app. It is only self/debug signed, so it will trip Android warnings. It is safe however, it is the same code here, just deployed by Median. Unfortunately it will have to have internet because it pulls from this page. This is due to the limitations of how it was built. If you really needed to work offline you can just download the raw HTML elements from the source code. 
